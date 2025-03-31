@@ -89,12 +89,6 @@ Endpoint	Method	Description
 👨‍💻 Contributors
 Your Name – Developer & Maintainer
 
-Contribute? Fork the repo and submit a PR! 🚀
-
-📝 License
-This project is licensed under the MIT License.
-
-This README.md is clean, structured, and GitHub-friendly with proper formatting, installation steps, features, and API details. 🎯🔥 Let me know if you need any modifications! 🚀
 
 
 
