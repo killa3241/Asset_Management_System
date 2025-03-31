@@ -1,0 +1,8 @@
+Button {
+    -fx-background-color: #2196F3;
+    -fx-text-fill: white;
+    -fx-padding: 10px;
+}
+Label {
+    -fx-font-size: 16px;
+}
