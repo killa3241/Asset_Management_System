@@ -1,98 +1,103 @@
-🚀 Asset Management System
-A JavaFX & Spring Boot application for managing assets efficiently.
+# Asset Management System
 
-📌 Project Structure
-bash
-Copy
-Edit
-AssetManagementSystem/
-│── frontend/  
-│   ├── src/  
-│   │   ├── controller/         # JavaFX controllers  
-│   │   ├── model/              # JavaFX models  
-│   │   ├── view/               # FXML views  
-│   │   ├── util/               # Utility classes  
-│   ├── resources/  
-│   │   ├── css/                # Stylesheets  
-│   │   ├── images/             # App images  
-│── backend/  
-│   ├── src/main/java/com/ams/  
-│   │   ├── config/             # Security & Config files  
-│   │   ├── controller/         # REST Controllers  
-│   │   ├── dto/                # Data Transfer Objects  
-│   │   ├── entity/             # Database Entities  
-│   │   ├── repository/         # Database Repositories  
-│   │   ├── service/            # Business Logic  
-│   │   ├── util/               # Utility classes  
-│   ├── src/main/resources/  
-│   │   ├── application.properties  # Spring Boot configuration  
-│   ├── pom.xml                 # Maven dependencies  
+An OOAD miniproject for managing financial assets like stocks, mutual funds, and real estate investments.
 
-🎯 Features
-✅ Admin Dashboard: Manage assets, assign users, and view reports
-✅ User Dashboard: View assigned assets and submit maintenance requests
-✅ Spring Boot Backend: REST APIs for asset management
-✅ JavaFX Frontend: Responsive UI using FXML
-✅ Database Integration: MySQL or PostgreSQL
-✅ Authentication: Secure login system using Spring Security
-✅ Styled UI: Custom CSS themes
+## Features
 
-🛠 Tech Stack
-💻 Frontend (JavaFX)
-JavaFX (FXML, CSS)
+- User authentication and registration
+- Portfolio management
+- Multiple asset types (Stocks, Mutual Funds, Real Estate)
+- Dashboard with portfolio performance visualization
+- Asset allocation overview
+- Returns tracking and calculation
+- Activity monitoring
 
-Scene Builder
+## Technologies Used
 
-Java 17
+- Java 11
+- Spring Boot 2.7.10
+- Spring Data JPA
+- Spring Security
+- JavaFX 17
+- H2 Database (for development)
 
-🛠 Backend (Spring Boot)
-Spring Boot
+## Architecture Overview
 
-Spring Data JPA (Hibernate)
+The application follows the MVC (Model-View-Controller) architecture pattern:
 
-Spring Security
+- **Model**: JPA entities for User, Portfolio, Asset, etc.
+- **View**: JavaFX FXML files providing the UI
+- **Controller**: Spring services and JavaFX controllers handling business logic
 
-PostgreSQL / MySQL
+The application also leverages several design patterns:
+- **Factory Pattern**: For creating different asset types
+- **Repository Pattern**: For data access
+- **Observer Pattern**: For notifying UI of data changes
+- **Strategy Pattern**: For different investment strategies
 
-Maven
+## Setup & Running
 
-🚀 Setup & Installation
-📌 1. Clone the repository
-sh
-Copy
-Edit
-git clone https://github.com/your-username/AssetManagementSystem.git
-cd AssetManagementSystem
+### Prerequisites
 
-📌 2. Set up the backend
-sh
-Copy
-Edit
-cd backend
-mvn clean install
-mvn spring-boot:run
-📌 3. Set up the frontend
-sh
-Copy
-Edit
-cd frontend
+- JDK 11 or higher
+- Maven 3.6 or higher
+
+### Build & Run
+
+1. Clone the repository or download the source code
+2. Navigate to the project directory in your terminal
+3. Build the project with Maven:
+
+```
+mvn clean package
+```
+
+4. Run the application:
+
+```
 mvn javafx:run
-📸 Screenshots
-<img src="frontend/resources/images/admin_dashboard.png" width="600"> <img src="frontend/resources/images/user_dashboard.png" width="600">
-📜 API Endpoints (Backend)
-Endpoint	Method	Description
-/api/admin/assets	GET	Get all assets
-/api/admin/assets	POST	Add a new asset
-/api/user/assets	GET	View assigned assets
-/api/admin/assign	POST	Assign assets to users
-/api/reports	GET	Generate reports
-👨‍💻 Contributors
-Your Name – Developer & Maintainer
+```
 
+Alternatively, you can run the executable JAR file:
 
+```
+java -jar target/asset-management-0.0.1-SNAPSHOT.jar
+```
 
+## Default Login
 
+For testing purposes, a default administrator account is provided:
+- Username: `admin`
+- Password: `admin`
 
+## Development Setup
 
+If you want to import the project into an IDE:
 
+1. Import as Maven project
+2. Ensure your IDE supports JavaFX (may require additional plugins)
+3. Set up Java 11 JDK
+4. Run the `AssetManagementJavaFXApplication` as the main class
 
+## Screenshots
+
+(Screenshots will be added here)
+
+## UML Diagrams
+
+(UML diagrams will be added here)
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Contributors
+
+- Akshay Simha
+- Anikait Nanjundappa
+- Anish D B
+- Ashish Chandra
+
+## Acknowledgments
+
+- Thanks to our professors and mentors for their guidance 
