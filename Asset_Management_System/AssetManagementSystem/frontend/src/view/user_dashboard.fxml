@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<GridPane xmlns:fx="http://javafx.com/fxml" fx:controller="controller.UserController">
-    <Label text="User Dashboard" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-    <Button text="View Assets" onAction="#handleViewAssets" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-</GridPane>
