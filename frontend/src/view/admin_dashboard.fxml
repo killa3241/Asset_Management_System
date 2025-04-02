@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<GridPane xmlns:fx="http://javafx.com/fxml" fx:controller="controller.AdminController">
-    <Label text="Admin Dashboard" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-    <Button text="Manage Assets" onAction="#handleManageAssets" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-    <Button text="View Reports" onAction="#handleViewReports" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-</GridPane>
