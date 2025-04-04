@@ -1,33 +1,13 @@
-// src/services/api.js
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:8080/api'; // Spring Boot backend URL
+const API_URL = "http://localhost:8080/api/auth";
 
-// Configure Axios instance
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const register = async (username, password) => {
+  const response = await axios.post(`${API_URL}/register`, { username, password });
+  return response.data;
+};
 
-// Add request interceptor for auth (if using Spring Security)
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Asset-related endpoints
-export const fetchAssets = () => api.get('/assets');
-export const createAsset = (assetData) => api.post('/assets', assetData);
-export const updateAsset = (id, assetData) => api.put(`/assets/${id}`, assetData);
-export const deleteAsset = (id) => api.delete(`/assets/${id}`);
-
-// Auth endpoints (if using Spring Security)
-export const login = (credentials) => api.post('/auth/login', credentials);
-export const register = (userData) => api.post('/auth/register', userData);
-
-export default api;
+export const login = async (username, password) => {
+  const response = await axios.post(`${API_URL}/login`, { username, password });
+  return response.data;
+};
