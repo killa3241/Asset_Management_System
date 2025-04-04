@@ -3,29 +3,38 @@ import { register } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 
 function Register() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage("");
+    setLoading(true);
+
+    if (!formData.username.trim() || !formData.password.trim()) {
+      setMessage("Username and password cannot be empty.");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const data = await register(username, password);
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        navigate("/dashboard");
+      const response = await register(formData.username, formData.password);
+      if (response.success) {
+        setMessage("Registration successful! Redirecting...");
+        setTimeout(() => navigate("/dashboard"), 1500);
       } else {
-        setMessage("Registration failed. Please try again.");
+        setMessage(response.message || "Registration failed. Try again.");
       }
     } catch (error) {
-      if (error.response?.status === 400) {
-        setMessage("Username already exists.");
-      } else {
-        setMessage("Registration failed. " + (error.message || "Try again."));
-      }
+      setMessage(error.response?.data?.message || "Registration failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -35,21 +44,27 @@ function Register() {
       <form onSubmit={handleRegister}>
         <input
           type="text"
+          name="username"
           placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          value={formData.username}
+          onChange={handleChange}
           required
-        /><br />
+        />
+        <br />
         <input
           type="password"
+          name="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={handleChange}
           required
-        /><br />
-        <button type="submit">Register</button>
+        />
+        <br />
+        <button type="submit" disabled={loading}>
+          {loading ? "Registering..." : "Register"}
+        </button>
       </form>
-      <p style={{ color: "red" }}>{message}</p>
+      {message && <p style={{ color: "red" }}>{message}</p>}
       <p>Already have an account? <Link to="/login">Login here</Link></p>
     </div>
   );
