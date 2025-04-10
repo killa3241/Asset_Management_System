@@ -23,6 +23,7 @@ public class SecurityConfig {
             .cors().and()
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // Allow auth routes
+                .requestMatchers("/api/**").permitAll() //
                 .anyRequest().authenticated()
             );
 

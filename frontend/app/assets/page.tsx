@@ -14,7 +14,7 @@ export default function AssetsPage() {
         <Button asChild>
           <Link href="/assets/new">
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Asset
+            Register Asset
           </Link>
         </Button>
       </div>
