@@ -1,9 +1,10 @@
-// app/auth/layout.tsx
 "use client"
 
-import type { Metadata } from "next"
+// app/dashboard/layout.tsx
 import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { SideNav } from "@/components/side-nav"
+import { TopNav } from "@/components/top-nav"
 import { Toaster } from "@/components/ui/toaster"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
@@ -12,21 +13,13 @@ import "../globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: {
-    default: "My App",
-    template: "%s | My App",
-  },
-  description: "A modern web application",
-}
-
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace("/dashboard")
+    if (!loading && !user) {
+      router.replace("/auth/login-register")
     }
   }, [user, loading, router])
 
@@ -38,18 +31,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     )
   }
 
-  if (user) {
+  if (!user) {
     return null
   }
 
   return (
-    <div className={`min-h-screen ${inter.className}`}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <div className="flex min-h-screen items-center justify-center bg-background">
-          {children}
-        </div>
-        <Toaster />
-      </ThemeProvider>
+    <div className="flex min-h-screen flex-col">
+      <TopNav />
+      <div className="flex flex-1">
+        <SideNav />
+        <main className="flex-1 p-6">{children}</main>
+      </div>
+      <Toaster />
     </div>
   )
 }

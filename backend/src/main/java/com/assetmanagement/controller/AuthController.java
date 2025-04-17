@@ -2,6 +2,9 @@ package com.assetmanagement.controller;
 
 import com.assetmanagement.entity.User;
 import com.assetmanagement.repository.UserRepository;
+
+import jakarta.servlet.http.HttpSession;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000") // Allow frontend access
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true") // Allow frontend access
 public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -35,13 +38,45 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody User user) {
+    public ResponseEntity<?> loginUser(@RequestBody User user, HttpSession session) {
         Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
 
         if (existingUser.isPresent() && passwordEncoder.matches(user.getPassword(), existingUser.get().getPassword())) {
-            return ResponseEntity.ok(Map.of("success", true, "message", "Login successful"));
+            session.setAttribute("user", existingUser.get()); // Store user in session
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Login successful",
+                "user", existingUser.get().getUsername()
+            ));
         }
 
         return ResponseEntity.status(401).body(Map.of("message", "Invalid username or password"));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "user", Map.of(
+                    "id", user.getId(),
+                    "username", user.getUsername() // this matches what frontend expects
+                    //"email", user.getEmail() // optional: only if email is in your table
+                )
+            ));
+        } else {
+            return ResponseEntity.status(401).body(Map.of(
+                "success", false,
+                "message", "Not logged in"
+            ));
+        }
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpSession session) {
+        session.invalidate();
+        return ResponseEntity.ok(Map.of("success", true, "message", "Logged out successfully"));
+    }
+
 }

@@ -1,38 +1,30 @@
+//components/auth/register-form.tsx
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { toast } from "@/components/ui/use-toast"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function RegisterForm() {
-  const router = useRouter()
+  const { register } = useAuth()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError("")
 
     try {
-      const res = await fetch("http://localhost:8080/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-        credentials: "include",
-      })
-
-      if (res.ok) {
-        toast({ title: "Registered successfully!" })
-        router.push("/dashboard")
-      } else {
-        const msg = await res.text()
-        toast({ title: "Registration failed", description: msg || "Try another username", variant: "destructive" })
+      const result = await register({ username, password })
+      if (!result.success) {
+        setError(result.message || "Username already exists")
       }
     } catch (err) {
-      toast({ title: "Error", description: "Something went wrong", variant: "destructive" })
+      setError("An unexpected error occurred. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -40,6 +32,11 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleRegister} className="space-y-4">
+      {error && (
+        <div className="text-sm text-red-500 text-center">
+          {error}
+        </div>
+      )}
       <Input
         type="text"
         placeholder="Username"

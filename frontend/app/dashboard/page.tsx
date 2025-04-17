@@ -1,5 +1,8 @@
+//app/dashboard/page.tsx
 "use client"
-
+import { useAuth } from "@/hooks/use-auth"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Overview } from "@/components/dashboard/overview"
@@ -8,6 +11,17 @@ import { AssetStatusChart } from "@/components/dashboard/asset-status-chart"
 import { DepartmentAssetChart } from "@/components/dashboard/department-asset-chart"
 
 export default function DashboardPage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/auth/login-register") // 👈 redirect on logout
+    }
+  }, [user, loading, router])
+
+  if (loading) return <div>Loading...</div>
+  if (!user) return null // Prevent rendering before redirect
   return (
     <div className="flex flex-col gap-4">
       {/* Metric Cards */}

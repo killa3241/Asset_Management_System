@@ -1,37 +1,30 @@
+//components/auth/login-form.tsx
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { toast } from "@/components/ui/use-toast"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function LoginForm() {
-  const router = useRouter()
+  const { login } = useAuth()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError("")
 
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-        credentials: "include",
-      })
-
-      if (res.ok) {
-        toast({ title: "Login successful!" })
-        router.push("/dashboard")
-      } else {
-        toast({ title: "Login failed", description: "Invalid credentials", variant: "destructive" })
+      const result = await login({ username, password })
+      if (!result.success) {
+        setError(result.message || "Invalid username or password")
       }
     } catch (err) {
-      toast({ title: "Error", description: "Something went wrong", variant: "destructive" })
+      setError("An unexpected error occurred. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -39,6 +32,11 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">
+      {error && (
+        <div className="text-sm text-red-500 text-center">
+          {error}
+        </div>
+      )}
       <Input
         type="text"
         placeholder="Username"
