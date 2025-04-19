@@ -17,8 +17,22 @@ export async function login(data: LoginData): Promise<AuthResponse> {
     });
 
     console.log("Login response status:", response.status);
-    const result = await response.json();
-    console.log("Login response data:", result);
+    
+    let result: any = {};
+    try {
+      const responseText = await response.text();
+      console.log("Login response text:", responseText);
+      
+      if (responseText) {
+        result = JSON.parse(responseText);
+      }
+    } catch (parseError) {
+      console.error("Error parsing login response:", parseError);
+      return {
+        success: false,
+        message: "Invalid response from server",
+      };
+    }
 
     if (!response.ok) {
       return {
@@ -30,7 +44,7 @@ export async function login(data: LoginData): Promise<AuthResponse> {
     return {
       success: true,
       message: result.message,
-      user: result.user, // expected to be { id, username }
+      user: result.user,
     };
   } catch (error) {
     console.error("Login error:", error);

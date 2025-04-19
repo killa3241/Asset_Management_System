@@ -46,11 +46,17 @@ public class AuthController {
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Login successful",
-                "user", existingUser.get().getUsername()
+                "user", Map.of(
+                    "id", existingUser.get().getId(),
+                    "username", existingUser.get().getUsername()
+                )
             ));
         }
 
-        return ResponseEntity.status(401).body(Map.of("message", "Invalid username or password"));
+        return ResponseEntity.status(401).body(Map.of(
+            "success", false,
+            "message", "Invalid username or password"
+        ));
     }
 
     @GetMapping("/me")
