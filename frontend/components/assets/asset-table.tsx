@@ -16,18 +16,138 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "@/components/ui/use-toast"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export function AssetTable() {
   const [assets, setAssets] = useState<any[]>([])
   const [sortColumn, setSortColumn] = useState("id")
   const [sortDirection, setSortDirection] = useState("asc")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/assets/all")
-      .then((res) => res.json())
-      .then((data) => setAssets(data))
-      .catch((err) => console.error("Failed to fetch assets:", err))
+    fetchAssets()
   }, [])
+
+  const fetchAssets = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem("token")
+      
+      const response = await fetch("http://localhost:8080/api/assets/all", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+      
+      if (!response.ok) {
+        if (response.status === 403) {
+          toast({
+            title: "Error",
+            description: "You don't have permission to view assets",
+            variant: "destructive"
+          })
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return
+      }
+      
+      const data = await response.json()
+      setAssets(data || [])
+    } catch (error) {
+      console.error("Failed to fetch assets:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch assets. Please try again later.",
+        variant: "destructive"
+      })
+      setAssets([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleStatusChange = async (assetId: number, newStatus: string) => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`http://localhost:8080/api/assets/status/${assetId}?status=${newStatus}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update status')
+      }
+
+      toast({
+        title: "Success",
+        description: "Asset status updated successfully",
+      })
+
+      // Refresh the assets list
+      fetchAssets()
+    } catch (error) {
+      console.error('Error updating status:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update asset status",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleDelete = async (assetId: number) => {
+    if (!confirm('Are you sure you want to delete this asset? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`http://localhost:8080/api/assets/${assetId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to delete asset'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorMessage
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      toast({
+        title: "Success",
+        description: "Asset deleted successfully",
+      })
+
+      // Refresh the assets list
+      fetchAssets()
+    } catch (error) {
+      console.error('Error deleting asset:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete asset",
+        variant: "destructive"
+      })
+    }
+  }
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -58,10 +178,13 @@ export function AssetTable() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "In Use": return "bg-green-500"
-      case "Available": return "bg-blue-500"
+      case "New": return "bg-blue-500"
+      case "Available": return "bg-green-500"
+      case "Assigned": return "bg-purple-500"
       case "Maintenance": return "bg-yellow-500"
+      case "Obsolete": return "bg-orange-500"
       case "Disposed": return "bg-red-500"
+      case "Permanently Removed": return "bg-gray-500"
       default: return "bg-gray-500"
     }
   }
@@ -102,9 +225,35 @@ export function AssetTable() {
               <TableCell>{asset.type}</TableCell>
               <TableCell>{asset.purchaseDate}</TableCell>
               <TableCell>
-                <Badge variant="outline" className={`${getStatusColor(asset.status)} text-white`}>
-                  {asset.status}
-                </Badge>
+                {asset.status === "Disposed" ? (
+                  <Badge variant="outline" className="bg-red-500 text-white">
+                    Disposed
+                  </Badge>
+                ) : (
+                  <Select
+                    value={asset.status}
+                    onValueChange={(value) => handleStatusChange(asset.id, value)}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue>
+                        <Badge variant="outline" className={`${getStatusColor(asset.status)} text-white`}>
+                          {asset.status}
+                        </Badge>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {asset.status === "Available" && (
+                        <>
+                          <SelectItem value="Obsolete">Obsolete</SelectItem>
+                          <SelectItem value="Disposed">Disposed</SelectItem>
+                        </>
+                      )}
+                      {asset.status === "Obsolete" && (
+                        <SelectItem value="Disposed">Disposed</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
               </TableCell>
               <TableCell className="text-right">₹{asset.value}</TableCell>
               <TableCell>{asset.assignedUser?.username || "—"}</TableCell>
@@ -129,7 +278,10 @@ export function AssetTable() {
                       <Tool className="mr-2 h-4 w-4" /> Schedule Maintenance
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-600">
+                    <DropdownMenuItem 
+                      className="text-red-600"
+                      onClick={() => handleDelete(asset.id)}
+                    >
                       <Trash2 className="mr-2 h-4 w-4" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
