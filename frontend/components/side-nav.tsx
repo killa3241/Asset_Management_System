@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Building, ClipboardList, Home, Settings, PenToolIcon as Tool, Trash2, Users } from "lucide-react"
+import { BarChart3, Building, Calculator, ClipboardList, Home, Settings, PenToolIcon as Tool, Trash2, Users } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,11 @@ const navItems = [
     title: "Maintenance",
     href: "/maintenance",
     icon: Tool,
+  },
+  {
+    title: "Finance",
+    href: "/finance",
+    icon: Calculator,
   },
   {
     title: "Reports",
