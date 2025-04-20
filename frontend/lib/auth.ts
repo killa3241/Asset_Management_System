@@ -133,24 +133,25 @@ export async function logout(): Promise<{ success: boolean; message: string }> {
 }
 
 // GET CURRENT USER
-export const getCurrentUser = async (): Promise<User | null> => {
+export async function getCurrentUser() {
   try {
-    console.log("Attempting to get current user");
-
-    const response = await fetch(`${API_URL}/auth/me`, {
+    const response = await fetch("http://localhost:8080/api/auth/me", {
       method: "GET",
       credentials: "include",
       headers: {
+        "Accept": "application/json",
         "Content-Type": "application/json",
-      },
-      mode: "cors",
+      }
     });
-    const Data = await response.json();
-    console.log("getCurrentUser response:", Data);
-    console.log("Current user response status:", response.status);
 
     if (!response.ok) {
-      console.log("Error fetching current user:", response.status, response.statusText);
+      console.error(`Authentication failed with status: ${response.status}`);
+      return null;
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error("Received non-JSON response from authentication server");
       return null;
     }
 
@@ -158,13 +159,13 @@ export const getCurrentUser = async (): Promise<User | null> => {
     console.log("Current user response data:", data);
 
     if (!data.success || !data.user) {
-      console.log("Invalid user data:", data);
+      console.log("No authenticated user found");
       return null;
     }
 
     return data.user;
   } catch (error) {
-    console.error("Get current user error:", error);
+    console.error("Error fetching current user:", error);
     return null;
   }
-};
+}
