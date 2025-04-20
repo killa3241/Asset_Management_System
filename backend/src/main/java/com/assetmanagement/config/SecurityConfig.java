@@ -28,7 +28,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/assets/**").permitAll() // Temporarily permit all for testing
+                .requestMatchers("/api/assets/**").permitAll()
+                .requestMatchers("/api/maintenance/**").permitAll() // Temporarily permit all for testing
                 .anyRequest().authenticated()
             );
 
