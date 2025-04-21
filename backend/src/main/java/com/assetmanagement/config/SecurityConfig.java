@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/users/all").permitAll()  // Explicitly permit the users/all endpoint
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/assets/**").permitAll()
                         .requestMatchers("/api/maintenance/**").permitAll() // Temporarily permit all for testing
@@ -42,7 +43,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("http://localhost:3000")); // 🔥 use this instead of setAllowedOrigins
+        config.setAllowedOriginPatterns(List.of("http://localhost:3000")); // Use pattern matching for origins
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization", "Content-Type"));
@@ -53,7 +54,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 public class UserController {
     private final UserRepository userRepository;
 
+
+
     public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -78,5 +80,9 @@ public class UserController {
 
             return ResponseEntity.internalServerError().body(response);
         }
+    }
+    @GetMapping("/test")
+    public ResponseEntity<String> testEndpoint() {
+        return ResponseEntity.ok("User API is working");
     }
 }
