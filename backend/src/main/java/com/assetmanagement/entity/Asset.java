@@ -40,7 +40,15 @@ public class Asset {
     @JoinColumn(name = "user_id")
     private User assignedUser;
 
+    // Maintenance specific fields
     private LocalDate lastMaintenanceDate;
+    private LocalDate scheduledMaintenanceDate;
+    private String maintenanceType;
+    private String maintenanceTechnician;
+    private Double maintenanceCost;
+    private String maintenanceDescription;
+    private String maintenanceId;
+
     private boolean obsolete = false;
     private boolean disposed = false;
     private boolean permanentlyRemoved = false;
@@ -115,17 +123,34 @@ public class Asset {
         }
     }
 
-    public void scheduleMaintenance(LocalDate date) {
+    public void scheduleMaintenance(LocalDate date, String type, String technician, Double cost, String description) {
         this.status = "Maintenance";
-        this.lastMaintenanceDate = date;
+        this.lastMaintenanceDate = LocalDate.now();
+        this.scheduledMaintenanceDate = date;
+        this.maintenanceType = type;
+        this.maintenanceTechnician = technician;
+        this.maintenanceCost = cost;
+        this.maintenanceDescription = description;
+
+        // Generate a maintenance ID if it doesn't exist
+        if (this.maintenanceId == null) {
+            this.maintenanceId = "M" + String.format("%03d", this.id);
+        }
     }
 
     public void completeMaintenance() {
+        this.lastMaintenanceDate = LocalDate.now();
         if (this.assignedUser != null) {
             this.status = "Assigned";
         } else {
             this.status = "Available";
         }
+        // Clear maintenance-specific fields
+        this.scheduledMaintenanceDate = null;
+        this.maintenanceType = null;
+        this.maintenanceTechnician = null;
+        this.maintenanceCost = null;
+        this.maintenanceDescription = null;
     }
 
     public void markObsolete() {

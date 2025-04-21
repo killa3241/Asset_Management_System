@@ -74,10 +74,10 @@ public class AssetService {
         return assetRepository.save(asset);
     }
 
-    public Asset scheduleMaintenance(Long id, LocalDate date) {
+    public Asset scheduleMaintenance(Long id, LocalDate date, String type, String technician, Double cost, String description) {
         Asset asset = assetRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Asset not found with ID: " + id));
-        asset.scheduleMaintenance(date);
+        asset.scheduleMaintenance(date, type, technician, cost, description);
         return assetRepository.save(asset);
     }
 
@@ -101,6 +101,11 @@ public class AssetService {
         asset.disposeAsset();
         return assetRepository.save(asset);
     }
+
+    public List<Asset> getAssetsByStatus(String status) {
+        return assetRepository.findByStatusIgnoreCase(status);
+    }
+
 
     @Transactional
     public void deleteAsset(Long id) {

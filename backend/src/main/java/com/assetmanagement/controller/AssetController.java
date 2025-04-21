@@ -85,6 +85,13 @@ public class AssetController {
         }
     }
 
+    @GetMapping("/maintenance")
+    public ResponseEntity<List<Asset>> getAssetsInMaintenance() {
+        List<Asset> maintenanceAssets = assetService.getAssetsByStatus("Maintenance");
+        return ResponseEntity.ok(maintenanceAssets);
+    }
+
+
     @PutMapping("/assign/{assetId}")
     public ResponseEntity<?> assignAsset(@PathVariable Long assetId, @RequestParam Long userId) {
         try {
@@ -107,27 +114,6 @@ public class AssetController {
         }
     }
 
-    @PutMapping("/maintenance/schedule/{id}")
-    public ResponseEntity<?> scheduleMaintenance(@PathVariable Long id, @RequestParam String date) {
-        try {
-            Asset asset = assetService.scheduleMaintenance(id, LocalDate.parse(date));
-            return ResponseEntity.ok(asset);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", e.getMessage()));
-        }
-    }
-
-    @PutMapping("/maintenance/complete/{id}")
-    public ResponseEntity<?> completeMaintenance(@PathVariable Long id) {
-        try {
-            Asset asset = assetService.completeMaintenance(id);
-            return ResponseEntity.ok(asset);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", e.getMessage()));
-        }
-    }
 
     @PutMapping("/obsolete/{id}")
     public ResponseEntity<?> markObsolete(@PathVariable Long id) {
@@ -162,6 +148,11 @@ public class AssetController {
         }
     }
 
+    @PutMapping("/maintenance/complete/{id}")
+    public ResponseEntity<Asset> completeMaintenanceForAsset(@PathVariable Long id) {
+        Asset updatedAsset = assetService.completeMaintenance(id);
+        return ResponseEntity.ok(updatedAsset);
+    }
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteAsset(@PathVariable Long id) {
         try {

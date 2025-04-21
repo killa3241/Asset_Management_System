@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowUpDown, MoreHorizontal, Pencil, PenToolIcon as Tool, Trash2, UserPlus } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Pencil, PenToolIcon as Tool, Trash2, UserPlus, Calendar } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -42,6 +42,8 @@ export function AssetTable() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
   const [selectedAsset, setSelectedAsset] = useState<any>(null)
   const [selectedUserId, setSelectedUserId] = useState<string>("")
+  const [maintenanceDialogOpen, setMaintenanceDialogOpen] = useState(false)
+  const [maintenanceDate, setMaintenanceDate] = useState("")
 
   useEffect(() => {
     fetchAssets()
@@ -188,6 +190,56 @@ export function AssetTable() {
     setSelectedAsset(asset)
     setSelectedUserId("")
     setAssignDialogOpen(true)
+  }
+
+  const openMaintenanceDialog = (asset: any) => {
+    setSelectedAsset(asset)
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0]
+    setMaintenanceDate(today)
+    setMaintenanceDialogOpen(true)
+  }
+
+  const handleScheduleMaintenance = async () => {
+    if (!selectedAsset || !maintenanceDate) {
+      toast({
+        title: "Error",
+        description: "Please select a valid maintenance date",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`http://localhost:8080/api/assets/maintenance/schedule/${selectedAsset.id}?date=${maintenanceDate}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to schedule maintenance')
+      }
+
+      toast({
+        title: "Success",
+        description: "Maintenance scheduled successfully",
+      })
+
+      // Close the dialog and refresh assets
+      setMaintenanceDialogOpen(false)
+      fetchAssets()
+    } catch (error) {
+      console.error('Error scheduling maintenance:', error)
+      toast({
+        title: "Error",
+        description: "Failed to schedule maintenance",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleAssignUser = async () => {
@@ -358,8 +410,8 @@ export function AssetTable() {
                         <UserPlus className="mr-2 h-4 w-4" /> Assign User
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Tool className="mr-2 h-4 w-4" /> Schedule Maintenance
+                      <DropdownMenuItem onClick={() => openMaintenanceDialog(asset)}>
+                        <Calendar className="mr-2 h-4 w-4" /> Schedule Maintenance
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -408,6 +460,40 @@ export function AssetTable() {
             </Button>
             <Button onClick={handleAssignUser}>
               Assign Asset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Maintenance Scheduling Dialog */}
+      <Dialog open={maintenanceDialogOpen} onOpenChange={setMaintenanceDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Schedule Maintenance</DialogTitle>
+            <DialogDescription>
+              Set a date for maintenance of this asset.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <label htmlFor="maintenance-date" className="block text-sm font-medium text-gray-700 mb-1">
+              Maintenance Date
+            </label>
+            <input
+              id="maintenance-date"
+              type="date"
+              className="w-full p-2 border rounded-md"
+              value={maintenanceDate}
+              onChange={(e) => setMaintenanceDate(e.target.value)}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMaintenanceDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleScheduleMaintenance}>
+              Schedule Maintenance
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -20,6 +20,13 @@ public class MaintenanceController {
         return ResponseEntity.ok(maintenanceService.getAllMaintenance());
     }
 
+    @GetMapping("/filter")
+    public ResponseEntity<List<MaintenanceDTO>> getMaintenanceByFilter(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String searchTerm) {
+        return ResponseEntity.ok(maintenanceService.getMaintenanceByFilter(type, searchTerm));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<MaintenanceDTO> getMaintenanceById(@PathVariable Long id) {
         return ResponseEntity.ok(maintenanceService.getMaintenanceById(id));
@@ -37,9 +44,15 @@ public class MaintenanceController {
         return ResponseEntity.ok(maintenanceService.updateMaintenance(id, maintenanceDTO));
     }
 
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Void> completeMaintenance(@PathVariable Long id) {
+        maintenanceService.completeMaintenance(id);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMaintenance(@PathVariable Long id) {
         maintenanceService.deleteMaintenance(id);
         return ResponseEntity.ok().build();
     }
-} 
+}

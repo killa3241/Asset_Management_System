@@ -11,12 +11,7 @@ export default function MaintenancePage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Maintenance</h1>
-        <Button asChild>
-          <Link href="/maintenance/new">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Schedule Maintenance
-          </Link>
-        </Button>
+
       </div>
       <Card>
         <CardHeader>
@@ -24,7 +19,7 @@ export default function MaintenancePage() {
           <CardDescription>Track and manage asset maintenance</CardDescription>
         </CardHeader>
         <CardContent>
-          <MaintenanceFilters />
+
           <MaintenanceTable />
         </CardContent>
       </Card>

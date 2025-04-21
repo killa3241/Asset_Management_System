@@ -17,12 +17,12 @@ export async function login(data: LoginData): Promise<AuthResponse> {
     });
 
     console.log("Login response status:", response.status);
-    
+
     let result: any = {};
     try {
       const responseText = await response.text();
       console.log("Login response text:", responseText);
-      
+
       if (responseText) {
         result = JSON.parse(responseText);
       }
