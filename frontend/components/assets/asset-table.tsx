@@ -24,28 +24,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export function AssetTable() {
   const [assets, setAssets] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
   const [sortColumn, setSortColumn] = useState("id")
   const [sortDirection, setSortDirection] = useState("asc")
   const [loading, setLoading] = useState(true)
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false)
+  const [selectedAsset, setSelectedAsset] = useState<any>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string>("")
 
   useEffect(() => {
     fetchAssets()
+    fetchUsers()
   }, [])
 
   const fetchAssets = async () => {
     try {
       setLoading(true)
       const token = localStorage.getItem("token")
-      
+
       const response = await fetch("http://localhost:8080/api/assets/all", {
         headers: {
           "Authorization": `Bearer ${token}`
         }
       })
-      
+
       if (!response.ok) {
         if (response.status === 403) {
           toast({
@@ -58,7 +71,7 @@ export function AssetTable() {
         }
         return
       }
-      
+
       const data = await response.json()
       setAssets(data || [])
     } catch (error) {
@@ -71,6 +84,33 @@ export function AssetTable() {
       setAssets([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("token")
+
+      const response = await fetch("http://localhost:8080/api/users/all", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setUsers(data || [])
+    } catch (error) {
+      console.error("Failed to fetch users:", error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch users. Please try again later.",
+        variant: "destructive"
+      })
+      setUsers([])
     }
   }
 
@@ -149,6 +189,54 @@ export function AssetTable() {
     }
   }
 
+  const openAssignDialog = (asset: any) => {
+    setSelectedAsset(asset)
+    setSelectedUserId("")
+    setAssignDialogOpen(true)
+  }
+
+  const handleAssignUser = async () => {
+    if (!selectedAsset || !selectedUserId) {
+      toast({
+        title: "Error",
+        description: "Please select a user to assign",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`http://localhost:8080/api/assets/assign/${selectedAsset.id}?userId=${selectedUserId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to assign asset')
+      }
+
+      toast({
+        title: "Success",
+        description: "Asset assigned successfully",
+      })
+
+      // Close the dialog and refresh assets
+      setAssignDialogOpen(false)
+      fetchAssets()
+    } catch (error) {
+      console.error('Error assigning asset:', error)
+      toast({
+        title: "Error",
+        description: "Failed to assign asset to user",
+        variant: "destructive"
+      })
+    }
+  }
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc")
@@ -190,107 +278,145 @@ export function AssetTable() {
   }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {[
-              { label: "ID", key: "id" },
-              { label: "Name", key: "name" },
-              { label: "Type", key: "type" },
-              { label: "Purchase Date", key: "purchaseDate" },
-              { label: "Status", key: "status" },
-              { label: "Value", key: "value" },
-            ].map((col) => (
-              <TableHead key={col.key} className="text-left">
-                <Button variant="ghost" onClick={() => handleSort(col.key)} className="px-0 font-medium">
-                  {col.label}
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-            ))}
-            <TableHead>Assigned To</TableHead>
-            <TableHead className="w-[100px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedAssets.map((asset) => (
-            <TableRow key={asset.id}>
-              <TableCell className="font-medium">
-                <Link href={`/assets/${asset.id}`} className="hover:underline">
-                  {asset.id}
-                </Link>
-              </TableCell>
-              <TableCell>{asset.name}</TableCell>
-              <TableCell>{asset.type}</TableCell>
-              <TableCell>{asset.purchaseDate}</TableCell>
-              <TableCell>
-                {asset.status === "Disposed" ? (
-                  <Badge variant="outline" className="bg-red-500 text-white">
-                    Disposed
-                  </Badge>
-                ) : (
-                  <Select
-                    value={asset.status}
-                    onValueChange={(value) => handleStatusChange(asset.id, value)}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue>
-                        <Badge variant="outline" className={`${getStatusColor(asset.status)} text-white`}>
-                          {asset.status}
-                        </Badge>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {asset.status === "Available" && (
-                        <>
-                          <SelectItem value="Obsolete">Obsolete</SelectItem>
-                          <SelectItem value="Disposed">Disposed</SelectItem>
-                        </>
-                      )}
-                      {asset.status === "Obsolete" && (
-                        <SelectItem value="Disposed">Disposed</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                )}
-              </TableCell>
-              <TableCell className="text-right">₹{asset.value}</TableCell>
-              <TableCell>{asset.assignedUser?.username || "—"}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem>
-                      <Pencil className="mr-2 h-4 w-4" /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <UserPlus className="mr-2 h-4 w-4" /> Assign
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Tool className="mr-2 h-4 w-4" /> Schedule Maintenance
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      className="text-red-600"
-                      onClick={() => handleDelete(asset.id)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {[
+                { label: "ID", key: "id" },
+                { label: "Name", key: "name" },
+                { label: "Type", key: "type" },
+                { label: "Purchase Date", key: "purchaseDate" },
+                { label: "Status", key: "status" },
+                { label: "Value", key: "value" },
+              ].map((col) => (
+                <TableHead key={col.key} className="text-left">
+                  <Button variant="ghost" onClick={() => handleSort(col.key)} className="px-0 font-medium">
+                    {col.label}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </TableHead>
+              ))}
+              <TableHead>Assigned To</TableHead>
+              <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {sortedAssets.map((asset) => (
+              <TableRow key={asset.id}>
+                <TableCell className="font-medium">
+                  <Link href={`/assets/${asset.id}`} className="hover:underline">
+                    {asset.id}
+                  </Link>
+                </TableCell>
+                <TableCell>{asset.name}</TableCell>
+                <TableCell>{asset.type}</TableCell>
+                <TableCell>{asset.purchaseDate}</TableCell>
+                <TableCell>
+                  {asset.status === "Disposed" ? (
+                    <Badge variant="outline" className="bg-red-500 text-white">
+                      Disposed
+                    </Badge>
+                  ) : (
+                    <Select
+                      value={asset.status}
+                      onValueChange={(value) => handleStatusChange(asset.id, value)}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue>
+                          <Badge variant="outline" className={`${getStatusColor(asset.status)} text-white`}>
+                            {asset.status}
+                          </Badge>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {asset.status === "Available" && (
+                          <>
+                            <SelectItem value="Obsolete">Obsolete</SelectItem>
+                            <SelectItem value="Disposed">Disposed</SelectItem>
+                          </>
+                        )}
+                        {asset.status === "Obsolete" && (
+                          <SelectItem value="Disposed">Disposed</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">₹{asset.value}</TableCell>
+                <TableCell>{asset.assignedUser?.username || "—"}</TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem>
+                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openAssignDialog(asset)}>
+                        <UserPlus className="mr-2 h-4 w-4" /> Assign User
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>
+                        <Tool className="mr-2 h-4 w-4" /> Schedule Maintenance
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => handleDelete(asset.id)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* User Assignment Dialog */}
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Assign Asset to User</DialogTitle>
+            <DialogDescription>
+              Select a user to assign this asset to.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a user" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    {user.username} ({user.firstName} {user.lastName})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAssignUser}>
+              Assign Asset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -22,7 +22,7 @@ public class Asset {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate purchaseDate;
-    
+
     private String status;
     private Double value;
     private String serialNumber;
@@ -33,10 +33,10 @@ public class Asset {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate warrantyExpiration;
-    
+
     private String notes;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User assignedUser;
 
@@ -59,17 +59,30 @@ public class Asset {
         this.status = "Assigned";
     }
 
+    public void unassignUser() {
+        this.assignedUser = null;
+        if (!this.status.equals("Maintenance") &&
+                !this.status.equals("Obsolete") &&
+                !this.status.equals("Disposed")) {
+            this.status = "Available";
+        }
+    }
+
     public void updateStatus(String newStatus) {
         if (this.status.equals("Disposed")) {
             throw new IllegalArgumentException("Cannot change status of a disposed asset");
         }
-        
+
         if (isValidStatusTransition(this.status, newStatus)) {
             this.status = newStatus;
             if (newStatus.equals("Obsolete")) {
                 this.obsolete = true;
             } else if (newStatus.equals("Disposed")) {
                 this.disposed = true;
+                // Unassign user when disposing asset
+                if (this.assignedUser != null) {
+                    this.assignedUser = null;
+                }
             }
         } else {
             throw new IllegalArgumentException("Invalid status transition from " + this.status + " to " + newStatus);
@@ -79,7 +92,20 @@ public class Asset {
     private boolean isValidStatusTransition(String currentStatus, String newStatus) {
         switch (currentStatus) {
             case "Available":
-                return newStatus.equals("Obsolete") || newStatus.equals("Disposed");
+                return newStatus.equals("Assigned") ||
+                        newStatus.equals("Maintenance") ||
+                        newStatus.equals("Obsolete") ||
+                        newStatus.equals("Disposed");
+            case "Assigned":
+                return newStatus.equals("Available") ||
+                        newStatus.equals("Maintenance") ||
+                        newStatus.equals("Obsolete") ||
+                        newStatus.equals("Disposed");
+            case "Maintenance":
+                return newStatus.equals("Available") ||
+                        newStatus.equals("Assigned") ||
+                        newStatus.equals("Obsolete") ||
+                        newStatus.equals("Disposed");
             case "Obsolete":
                 return newStatus.equals("Disposed");
             case "Disposed":
@@ -110,5 +136,9 @@ public class Asset {
     public void disposeAsset() {
         this.status = "Disposed";
         this.disposed = true;
+        // Unassign user when disposing asset
+        if (this.assignedUser != null) {
+            this.assignedUser = null;
+        }
     }
 }
