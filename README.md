@@ -1,6 +1,6 @@
 # Asset Management System
 
-A corporate-level OOAD mini-project for managing IT assets.
+A corporate-level IT asset tracking solution built as part of an OOAD mini-project. The system enables secure asset management with features like role-based access control, real-time tracking, asset assignment, maintenance logs, audit trails, and performance reporting.
 
 ## Features
 
